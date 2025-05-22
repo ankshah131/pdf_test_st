@@ -19,6 +19,26 @@ def generate_pdf():
     <a href="https://www.conservationgateway.org/ConservationByGeography/NorthAmerica/UnitedStates/nevada/water/Documents/ModelingUpdate_Watersmart_Workshop3_forpdf.pdf" color="blue">Nevada TNC website (here)</a>.<br/><br/>
 
     This dataset does not prove or make any claim about the nature and/or extent of groundwater levels or groundwater-dependent ecosystems (GDEs) for any mapped location...<br/><br/>
+
+    <b>REFERENCES:</b><br/><br/>
+
+    Abatzoglou JT. 2013. Development of gridded surface meteorological data for ecological applications and modelling. Int. J. Climatol. 33: 121–131. 
+    Available at <a href="http://onlinelibrary.wiley.com/doi/10.1002/joc.3413/full" color="blue">http://onlinelibrary.wiley.com/doi/10.1002/joc.3413/full</a><br/><br/>
+    
+    Fang, H., Baret, F., Plummer, S., & Schaepman-Strub, G. (2019). An overview of global leaf area index (LAI): Methods, products, validation, and applications. Reviews of Geophysics, 57, 739–799. 
+    Available at <a href="https://doi.org/10.1029/2018RG000608" color="blue">https://doi.org/10.1029/2018RG000608</a><br/><br/>
+    
+    Food and Agriculture Organization. 2006. Soil Texture. 
+    Available at <a href="https://www.fao.org/fishery/static/FAO_Training/FAO_Training/General/x6706e/x6706e06.htm" color="blue">https://www.fao.org/fishery/static/FAO_Training/FAO_Training/General/x6706e/x6706e06.htm</a><br/><br/>
+    
+    Nevada Division of Water Planning. 1999. Nevada State Water Plan. Carson City: Department of Conservation and Natural Resources, Nevada Division of Water Planning. 
+    Available at <a href="https://water.nv.gov/library/water-planning-reports" color="blue">https://water.nv.gov/library/water-planning-reports</a><br/><br/>
+    
+    The Nature Conservancy. 2021. Plant Rooting Depth Database. 
+    Available at <a href="https://www.groundwaterresourcehub.org/where-we-work/california/plant-rooting-depth-database/" color="blue">https://www.groundwaterresourcehub.org/where-we-work/california/plant-rooting-depth-database/</a><br/><br/>
+    
+    Walkinshaw M, O’Geen AT, Beaudette DE. 2020. Soil Properties. California Soil Resource Lab. 
+    Available at <a href="https://casoilresource.lawr.ucdavis.edu/soil-properties/" color="blue">https://casoilresource.lawr.ucdavis.edu/soil-properties/</a>
     """
 
     # Use ReportLab's Paragraph to parse basic HTML and hyperlinks
