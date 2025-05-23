@@ -51,7 +51,7 @@ def generate_pdf(image_url):
     story.append(Paragraph(text, styles["Normal"]))
     story.append(Spacer(1, 0.25 * inch))
 
-        # Add image from URL (optional)
+    # Add image from URL (optional)
     if image_url:
         try:
             img_response = requests.get(image_url)
@@ -66,7 +66,7 @@ def generate_pdf(image_url):
             img_byte_arr.seek(0)
 
             # Create ReportLab Image and append to story
-            rl_img = reportImage(img_byte_arr, width=7*inch, height=3*inch)
+            rl_img = reportImage(img_byte_arr, width=7*inch, height=2*inch)
             story.append(rl_img)
         except Exception as e:
             st.error(f"[ERROR] Failed to load image from URL: {e}")
