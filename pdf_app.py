@@ -8,7 +8,7 @@ import io
 from reportlab.platypus import Image as reportImage
 from PIL import Image
 
-PATH_LOGOS = "https://raw.githubusercontent.com/ankshah131/WaterSMART_App/c490a2622b103eec28df2371dfabcc2c45b439b9/streamlit_app/app_def/assets/logos.png"
+PATH_LOGOS = "https://raw.githubusercontent.com/ankshah131/pdf_test_st/8bd1f0b647822f368111346c376a00e7122c61ff/logos.png"
 
 def generate_pdf(image_url):
     buffer = io.BytesIO()
