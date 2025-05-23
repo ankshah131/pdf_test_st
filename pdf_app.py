@@ -69,7 +69,7 @@ def generate_pdf(image_url):
             rl_img = reportImage(img_byte_arr, width=5*inch, height=3*inch)
             story.append(rl_img)
         except Exception as e:
-            print(f"[ERROR] Failed to load image from URL: {e}")
+            st.error(f"[ERROR] Failed to load image from URL: {e}")
 
     doc.build(story)
     buffer.seek(0)
