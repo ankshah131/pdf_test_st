@@ -49,20 +49,47 @@ disclaimer_text= """
     Available at <a href="https://casoilresource.lawr.ucdavis.edu/soil-properties/" color="blue">https://casoilresource.lawr.ucdavis.edu/soil-properties/</a>
     """
 
-def create_map_snapshot(lat, lon, zoom=10):
-    # Step 1: Create a folium map with a marker
-    m = folium.Map(location=[lat, lon], zoom_start=zoom)
-    folium.Marker([lat, lon], popup="Location").add_to(m)
+import asyncio
+import folium
+import tempfile
+import os
+from PIL import Image
+from pyppeteer import launch
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as reportImage
+from reportlab.lib.pagesizes import LETTER
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
+import io
+import streamlit as st
+import requests
 
-    # Step 2: Save as HTML then export image using leafmap
+
+async def take_map_screenshot(html_path, screenshot_path):
+    browser = await launch(headless=True, args=["--no-sandbox"])
+    page = await browser.newPage()
+    await page.goto(f"file://{html_path}")
+    await page.setViewport({"width": 800, "height": 600})
+    await page.waitForSelector("div.leaflet-pane")  # wait for map to render
+    await asyncio.sleep(2)  # wait for map tiles to load
+    await page.screenshot({"path": screenshot_path})
+    await browser.close()
+
+
+def create_map_snapshot(lat, lon, zoom=10):
     with tempfile.TemporaryDirectory() as tmpdir:
         html_path = os.path.join(tmpdir, "map.html")
-        img_path = os.path.join(tmpdir, "map.png")
-        m.save(html_path)
-        leafmap.save_map(m, html_path, img_path)
+        screenshot_path = os.path.join(tmpdir, "map.png")
 
-        # Step 3: Load image and return it
-        image = Image.open(img_path).convert("RGB")
+        # Create map and save as HTML
+        m = folium.Map(location=[lat, lon], zoom_start=zoom)
+        folium.Marker([lat, lon], popup="Location").add_to(m)
+        m.save(html_path)
+
+        # Run async screenshot
+        asyncio.get_event_loop().run_until_complete(take_map_screenshot(html_path, screenshot_path))
+
+        # Load screenshot into buffer
+        image = Image.open(screenshot_path).convert("RGB")
         img_buffer = io.BytesIO()
         image.save(img_buffer, format='PNG')
         img_buffer.seek(0)
@@ -75,18 +102,17 @@ def generate_pdf(disclaimer_text, logos_url, map_img_buffer=None):
     styles = getSampleStyleSheet()
     story = []
 
-    # Add text
     story.append(Paragraph(disclaimer_text, styles["Normal"]))
     story.append(Spacer(1, 0.25 * inch))
 
-    # Add logos if needed
+    # Add logos image
     if logos_url:
         try:
             logos_img = Image.open(requests.get(logos_url, stream=True).raw).convert("RGB")
             logos_buf = io.BytesIO()
             logos_img.save(logos_buf, format="PNG")
             logos_buf.seek(0)
-            story.append(reportImage(logos_buf, width=6*inch, height=2*inch))
+            story.append(reportImage(logos_buf, width=6 * inch, height=2 * inch))
             story.append(Spacer(1, 0.25 * inch))
         except Exception as e:
             st.error(f"Error loading logos: {e}")
@@ -94,7 +120,7 @@ def generate_pdf(disclaimer_text, logos_url, map_img_buffer=None):
     # Add map image
     if map_img_buffer:
         story.append(Paragraph("<b>Map Location:</b>", styles["Normal"]))
-        story.append(reportImage(map_img_buffer, width=6*inch, height=4*inch))
+        story.append(reportImage(map_img_buffer, width=6 * inch, height=4 * inch))
 
     doc.build(story)
     buffer.seek(0)
@@ -105,6 +131,7 @@ def generate_pdf(disclaimer_text, logos_url, map_img_buffer=None):
 st.title("PDF Download with Embedded Hyperlinks")
 
 if st.button("Generate PDF"):
-    map_img_buffer = create_map_snapshot(lat, lon)
-    pdf_buffer = generate_pdf(disclaimer_text, logos_url, map_img_buffer=map_img_buffer)
+    disclaimer_text = "<b>Disclaimer:</b> This is a test PDF with a dynamic map."
+    map_buffer = create_map_snapshot(lat, lon)
+    pdf_buffer = generate_pdf(disclaimer_text, logos_url, map_img_buffer=map_buffer)
     st.download_button("Download PDF", pdf_buffer, file_name="map_report.pdf", mime="application/pdf")
