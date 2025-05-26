@@ -50,18 +50,15 @@ disclaimer_text= """
     Available at <a href="https://casoilresource.lawr.ucdavis.edu/soil-properties/" color="blue">https://casoilresource.lawr.ucdavis.edu/soil-properties/</a>
     """
 
-async def take_map_screenshot(html_path, screenshot_path):
-    browser = await launch(headless=True, args=["--no-sandbox"])
-    page = await browser.newPage()
-    await page.goto(f"file://{html_path}")
-    await page.setViewport({"width": 800, "height": 600})
-    await page.waitForSelector("div.leaflet-pane")  # wait for map to render
-    await asyncio.sleep(2)  # wait for map tiles to load
-    await page.screenshot({"path": screenshot_path})
-    await browser.close()
-
-
 def create_map_snapshot(lat, lon, zoom=10):
+    def safe_async_run(coro):
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        return loop.run_until_complete(coro)
+
     with tempfile.TemporaryDirectory() as tmpdir:
         html_path = os.path.join(tmpdir, "map.html")
         screenshot_path = os.path.join(tmpdir, "map.png")
@@ -71,8 +68,8 @@ def create_map_snapshot(lat, lon, zoom=10):
         folium.Marker([lat, lon], popup="Location").add_to(m)
         m.save(html_path)
 
-        # Run async screenshot
-        asyncio.get_event_loop().run_until_complete(take_map_screenshot(html_path, screenshot_path))
+        # Safely run the screenshot
+        safe_async_run(take_map_screenshot(html_path, screenshot_path))
 
         # Load screenshot into buffer
         image = Image.open(screenshot_path).convert("RGB")
