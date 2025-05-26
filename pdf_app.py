@@ -1,16 +1,12 @@
-import asyncio
-import folium
-import tempfile
-import os
+import streamlit as st
+import io
+import requests
 from PIL import Image
-from pyppeteer import launch
+from staticmap import StaticMap, CircleMarker
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as reportImage
 from reportlab.lib.pagesizes import LETTER
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
-import io
-import streamlit as st
-import requests
 
 from reportlab.platypus import Image as reportImage
 from PIL import Image
@@ -51,47 +47,19 @@ disclaimer_text= """
     """
 
 
-# Step 1: Async screenshot function
-async def take_map_screenshot(html_path, screenshot_path):
-    browser = await launch(headless=True, args=["--no-sandbox"])
-    page = await browser.newPage()
-    await page.goto(f"file://{html_path}")
-    await page.setViewport({"width": 800, "height": 600})
-    await page.waitForSelector("div.leaflet-pane")  # Wait for map tiles
-    await asyncio.sleep(2)
-    await page.screenshot({"path": screenshot_path})
-    await browser.close()
-
-
-# Step 2: Sync wrapper for Streamlit compatibility
-def safe_async_run(coro):
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    return loop.run_until_complete(coro)
-
-
-# Step 3: Map generator with screenshot
+# ---- Static map renderer ----
 def create_map_snapshot(lat, lon, zoom=10):
-    with tempfile.TemporaryDirectory() as tmpdir:
-        html_path = os.path.join(tmpdir, "map.html")
-        screenshot_path = os.path.join(tmpdir, "map.png")
+    m = StaticMap(800, 600)
+    marker = CircleMarker((lon, lat), 'red', 12)
+    m.add_marker(marker)
+    image = m.render(zoom=zoom)
 
-        m = folium.Map(location=[lat, lon], zoom_start=zoom)
-        folium.Marker([lat, lon], popup="Location").add_to(m)
-        m.save(html_path)
+    img_buffer = io.BytesIO()
+    image.save(img_buffer, format='PNG')
+    img_buffer.seek(0)
+    return img_buffer
 
-        safe_async_run(take_map_screenshot(html_path, screenshot_path))
-
-        image = Image.open(screenshot_path).convert("RGB")
-        img_buffer = io.BytesIO()
-        image.save(img_buffer, format='PNG')
-        img_buffer.seek(0)
-        return img_buffer
-
-
+# ---- PDF Generator ----
 def generate_pdf(disclaimer_text, logos_url, map_img_buffer=None):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=LETTER)
