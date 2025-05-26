@@ -9,15 +9,12 @@ import io
 from reportlab.platypus import Image as reportImage
 from PIL import Image
 
-PATH_LOGOS = "https://raw.githubusercontent.com/ankshah131/pdf_test_st/8bd1f0b647822f368111346c376a00e7122c61ff/logos.png"
+logos_url = "https://raw.githubusercontent.com/ankshah131/pdf_test_st/8bd1f0b647822f368111346c376a00e7122c61ff/logos.png"
 
-def generate_pdf(image_url):
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=LETTER)
-    styles = getSampleStyleSheet()
-    story = []
+lat = st.number_input("Latitude", value=36.7783, format="%.6f")
+lon = st.number_input("Longitude", value=-119.4179, format="%.6f")
 
-    text = """
+disclaimer_text= """
     <b>DISCLAIMERS:</b><br/><br/>
     This map tool presents results of modeling for Reclamation Applied Science project R19AP00278 <i>Quantifying Environmental Water Requirements for Groundwater Dependent Ecosystems for Resilient Water Management</i>. 
     See <a href="https://www.conservationgateway.org/ConservationByGeography/NorthAmerica/UnitedStates/nevada/water/Pages/Quantifying-water-requirements-for-GDEs.aspx" color="blue">this link</a> to find out more about the project. 
@@ -47,37 +44,62 @@ def generate_pdf(image_url):
     Available at <a href="https://casoilresource.lawr.ucdavis.edu/soil-properties/" color="blue">https://casoilresource.lawr.ucdavis.edu/soil-properties/</a>
     """
 
-    # Use ReportLab's Paragraph to parse basic HTML and hyperlinks
-    story.append(Paragraph(text, styles["Normal"]))
+def create_map_snapshot(lat, lon, zoom=10):
+    # Step 1: Create a folium map with a marker
+    m = folium.Map(location=[lat, lon], zoom_start=zoom)
+    folium.Marker([lat, lon], popup="Location").add_to(m)
+
+    # Step 2: Save as HTML then export image using leafmap
+    with tempfile.TemporaryDirectory() as tmpdir:
+        html_path = os.path.join(tmpdir, "map.html")
+        img_path = os.path.join(tmpdir, "map.png")
+        m.save(html_path)
+        leafmap.save_map(m, html_path, img_path)
+
+        # Step 3: Load image and return it
+        image = Image.open(img_path).convert("RGB")
+        img_buffer = io.BytesIO()
+        image.save(img_buffer, format='PNG')
+        img_buffer.seek(0)
+        return img_buffer
+
+
+def generate_pdf(disclaimer_text, logos_url, map_img_buffer=None):
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=LETTER)
+    styles = getSampleStyleSheet()
+    story = []
+
+    # Add text
+    story.append(Paragraph(disclaimer_text, styles["Normal"]))
     story.append(Spacer(1, 0.25 * inch))
 
-    # Add image from URL (optional)
-    if image_url:
+    # Add logos if needed
+    if logos_url:
         try:
-            img_response = requests.get(image_url)
-            img_response.raise_for_status()
-
-            # Open with PIL and convert to RGB
-            pil_img = Image.open(io.BytesIO(img_response.content)).convert("RGB")
-
-            # Save to byte array in PNG format
-            img_byte_arr = io.BytesIO()
-            pil_img.save(img_byte_arr, format='PNG')
-            img_byte_arr.seek(0)
-
-            # Create ReportLab Image and append to story
-            rl_img = reportImage(img_byte_arr, width=7*inch, height=2*inch)
-            story.append(rl_img)
+            logos_img = Image.open(requests.get(logos_url, stream=True).raw).convert("RGB")
+            logos_buf = io.BytesIO()
+            logos_img.save(logos_buf, format="PNG")
+            logos_buf.seek(0)
+            story.append(reportImage(logos_buf, width=6*inch, height=2*inch))
+            story.append(Spacer(1, 0.25 * inch))
         except Exception as e:
-            st.error(f"[ERROR] Failed to load image from URL: {e}")
+            st.error(f"Error loading logos: {e}")
+
+    # Add map image
+    if map_img_buffer:
+        story.append(Paragraph("<b>Map Location:</b>", styles["Normal"]))
+        story.append(reportImage(map_img_buffer, width=6*inch, height=4*inch))
 
     doc.build(story)
     buffer.seek(0)
     return buffer
 
+
 # Streamlit UI
 st.title("PDF Download with Embedded Hyperlinks")
 
-if st.button("Download PDF"):
-    pdf_buffer = generate_pdf(PATH_LOGOS)
-    st.download_button("Click to Download", pdf_buffer, file_name="disclaimer_report.pdf", mime="application/pdf")
+if st.button("Generate PDF"):
+    map_img_buffer = create_map_snapshot(lat, lon)
+    pdf_buffer = generate_pdf(disclaimer_text, logos_url, map_img_buffer=map_img_buffer)
+    st.download_button("Download PDF", pdf_buffer, file_name="map_report.pdf", mime="application/pdf")
