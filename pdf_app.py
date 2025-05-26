@@ -1,10 +1,15 @@
-import requests 
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+import folium
+import leafmap.foliumap as leafmap
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as reportImage
 from reportlab.lib.pagesizes import LETTER
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
-import streamlit as st
+from PIL import Image
 import io
+import streamlit as st
+import tempfile
+import os
+
 
 from reportlab.platypus import Image as reportImage
 from PIL import Image
