@@ -1,2 +1,4 @@
+folium
+leafmap
 streamlit
 reportlab
