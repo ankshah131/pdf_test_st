@@ -1,3 +1,5 @@
+io
+asyncio
 folium
 leafmap
 streamlit
