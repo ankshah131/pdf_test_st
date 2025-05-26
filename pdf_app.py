@@ -1,15 +1,16 @@
+import asyncio
 import folium
-import leafmap.foliumap as leafmap
+import tempfile
+import os
+from PIL import Image
+from pyppeteer import launch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as reportImage
 from reportlab.lib.pagesizes import LETTER
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
-from PIL import Image
 import io
 import streamlit as st
-import tempfile
-import os
-
+import requests
 
 from reportlab.platypus import Image as reportImage
 from PIL import Image
@@ -48,21 +49,6 @@ disclaimer_text= """
     Walkinshaw M, O’Geen AT, Beaudette DE. 2020. Soil Properties. California Soil Resource Lab. 
     Available at <a href="https://casoilresource.lawr.ucdavis.edu/soil-properties/" color="blue">https://casoilresource.lawr.ucdavis.edu/soil-properties/</a>
     """
-
-import asyncio
-import folium
-import tempfile
-import os
-from PIL import Image
-from pyppeteer import launch
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as reportImage
-from reportlab.lib.pagesizes import LETTER
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.units import inch
-import io
-import streamlit as st
-import requests
-
 
 async def take_map_screenshot(html_path, screenshot_path):
     browser = await launch(headless=True, args=["--no-sandbox"])
