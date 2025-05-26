@@ -3,3 +3,4 @@ folium
 leafmap
 streamlit
 reportlab
+pyppeteer
